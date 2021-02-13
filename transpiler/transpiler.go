@@ -12,26 +12,36 @@ import (
 
 // Run ...
 func Run(code string) error {
-	if err := setupTempWorkspace(code); err != nil {
+	_, err := setupTempWorkspace(code)
+	if err != nil {
 		return fmt.Errorf("setupping temp workspace: %w", err)
 	}
 
 	return nil
 }
 
-func setupTempWorkspace(code string) error {
+func setupTempWorkspace(code string) (workspace string, err error) {
 	log.Println("Creating temp workspace...")
-	workspace, err := ioutil.TempDir("", "lsv_api_transpiler_workspace_")
+	workspace, err = ioutil.TempDir("", "lsv_api_transpiler_workspace_")
 	if err != nil {
-		return fmt.Errorf("creating temp workspace: %w", err)
+		return "", fmt.Errorf("creating temp workspace: %w", err)
 	}
+
+	defer func() {
+		if err != nil {
+			err := os.Remove(workspace)
+			if err != nil {
+				log.Printf("Error while trying to remove workspace: %v", err)
+			}
+		}
+	}()
 
 	log.Println("Temp workspace created:", workspace)
 
 	log.Println("Copying template workspace.")
 	err = copyDir(workSpaceTemplatePath, workspace)
 	if err != nil {
-		return fmt.Errorf("copying template workspace: %w", err)
+		return "", fmt.Errorf("copying template workspace: %w", err)
 	}
 
 	log.Println("Template workspace copied successfully.")
@@ -41,12 +51,12 @@ func setupTempWorkspace(code string) error {
 	log.Println("Creating main user code file:", topSV)
 	err = ioutil.WriteFile(topSV, []byte(code), 0600)
 	if err != nil {
-		return fmt.Errorf("creating main user code file: %w", err)
+		return "", fmt.Errorf("creating main user code file: %w", err)
 	}
 
 	log.Println("Main user code file created successfully.")
 
-	return nil
+	return "", nil
 }
 
 // copyDir Copy the contents of a src directory to a dst one.
