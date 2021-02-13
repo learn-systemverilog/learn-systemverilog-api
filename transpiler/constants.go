@@ -1,5 +1,5 @@
 package transpiler
 
 const (
-	MainSVFileName = "top.sv"
+	mainSVFileName = "top.sv"
 )
