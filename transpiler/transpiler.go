@@ -83,11 +83,7 @@ func copyDir(src, dst string) error {
 
 		dstFilename := path.Join(dst, info.Name())
 
-		if err := ioutil.WriteFile(dstFilename, fileData, 0600); err != nil {
-			return err
-		}
-
-		return nil
+		return ioutil.WriteFile(dstFilename, fileData, 0600)
 	})
 
 	return err
