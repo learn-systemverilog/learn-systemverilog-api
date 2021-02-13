@@ -12,6 +12,14 @@ import (
 
 // Run ...
 func Run(code string) error {
+	if err := setupTempWorkspace(code); err != nil {
+		return fmt.Errorf("setupping temp workspace: %w", err)
+	}
+
+	return nil
+}
+
+func setupTempWorkspace(code string) error {
 	log.Println("Creating temp workspace...")
 	workspace, err := ioutil.TempDir("", "lsv_api_transpiler_workspace_")
 	if err != nil {
