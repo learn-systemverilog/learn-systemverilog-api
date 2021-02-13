@@ -1,5 +1,6 @@
 package transpiler
 
 const (
-	mainSVFileName = "top.sv"
+	mainSVFileName        = "top.sv"
+	workSpaceTemplatePath = "workspace_template"
 )
