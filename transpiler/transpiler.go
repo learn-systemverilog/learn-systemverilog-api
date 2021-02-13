@@ -12,10 +12,16 @@ import (
 
 // Run ...
 func Run(code string) error {
-	_, err := setupTempWorkspace(code)
+	workspace, err := setupTempWorkspace(code)
 	if err != nil {
 		return fmt.Errorf("setupping temp workspace: %w", err)
 	}
+	defer func() {
+		err := os.RemoveAll(workspace)
+		if err != nil {
+			log.Printf("Error while trying to remove workspace: %v", err)
+		}
+	}()
 
 	return nil
 }
@@ -29,7 +35,7 @@ func setupTempWorkspace(code string) (workspace string, err error) {
 
 	defer func() {
 		if err != nil {
-			err := os.Remove(workspace)
+			err := os.RemoveAll(workspace)
 			if err != nil {
 				log.Printf("Error while trying to remove workspace: %v", err)
 			}
@@ -56,7 +62,7 @@ func setupTempWorkspace(code string) (workspace string, err error) {
 
 	log.Println("Main user code file created successfully.")
 
-	return "", nil
+	return
 }
 
 // copyDir Copy the contents of a src directory to a dst one.
