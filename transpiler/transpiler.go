@@ -43,98 +43,8 @@ func Run(code string, msgs chan<- map[string]string) {
 		"message": "Transpiling the code from SystemVerilog to C++.",
 	}
 
-	////////////////////////////////////////////////////////////////////////////////
-
-	cmd := exec.Command("make", "simulator.js")
-	cmd.Dir = workspace
-
-	cmd.Stdin = nil
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
-
+	if ok := transpileSVToCPP(workspace, msgs); !ok {
 		return
-	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
-
-		return
-	}
-
-	if err := cmd.Start(); err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
-
-		return
-	}
-
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		scanner := bufio.NewScanner(stdout)
-		for scanner.Scan() {
-			msgs <- map[string]string{
-				"type":    msgTypeStdout,
-				"message": scanner.Text(),
-			}
-		}
-		if scanner.Err() != nil {
-			msgs <- map[string]string{
-				"type":    msgTypeWarning,
-				"message": scanner.Err().Error(),
-			}
-		}
-
-		wg.Done()
-	}()
-
-	wg.Add(1)
-	go func() {
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			msgs <- map[string]string{
-				"type":    msgTypeStderr,
-				"message": scanner.Text(),
-			}
-		}
-		if scanner.Err() != nil {
-			msgs <- map[string]string{
-				"type":    msgTypeWarning,
-				"message": scanner.Err().Error(),
-			}
-		}
-
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	if err := cmd.Wait(); err != nil {
-		if errors.Is(err, &exec.ExitError{}) {
-			msgs <- map[string]string{
-				"type":    "exit",
-				"message": err.Error(),
-			}
-
-			return
-		}
-
-		msgs <- map[string]string{
-			"type":    msgTypeWarning,
-			"message": fmt.Sprintf("Waiting for the command: %v", err),
-		}
 	}
 }
 
@@ -223,4 +133,100 @@ func copyDir(src, dst string) error {
 	})
 
 	return err
+}
+
+func transpileSVToCPP(workspace string, msgs chan<- map[string]string) bool {
+	cmd := exec.Command("make", "obj_dir")
+	cmd.Dir = workspace
+
+	cmd.Stdin = nil
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return false
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return false
+	}
+
+	if err := cmd.Start(); err != nil {
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return false
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			msgs <- map[string]string{
+				"type":    msgTypeStdout,
+				"message": scanner.Text(),
+			}
+		}
+		if scanner.Err() != nil {
+			msgs <- map[string]string{
+				"type":    msgTypeWarning,
+				"message": scanner.Err().Error(),
+			}
+		}
+
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			msgs <- map[string]string{
+				"type":    msgTypeStderr,
+				"message": scanner.Text(),
+			}
+		}
+		if scanner.Err() != nil {
+			msgs <- map[string]string{
+				"type":    msgTypeWarning,
+				"message": scanner.Err().Error(),
+			}
+		}
+
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	if err := cmd.Wait(); err != nil {
+		if errors.Is(err, &exec.ExitError{}) {
+			msgs <- map[string]string{
+				"type":    "exit",
+				"message": err.Error(),
+			}
+
+			return false
+		}
+
+		msgs <- map[string]string{
+			"type":    msgTypeWarning,
+			"message": fmt.Sprintf("Waiting for the command: %v", err),
+		}
+	}
+
+	return true
 }
