@@ -43,7 +43,7 @@ func Run(code string, msgs chan<- map[string]string) {
 		"message": "Transpiling the code from SystemVerilog to C++.",
 	}
 
-	if ok := transpileSVToCPP(workspace, msgs); !ok {
+	if !transpileSVToCPP(workspace, msgs) {
 		return
 	}
 }
