@@ -88,64 +88,16 @@ func setupTempWorkspace(code string) (workspace string, err error) {
 	return
 }
 
-func logInternal(msg, severity string) LogInternal {
-	log.Println(msg)
+func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
+	logs <- logInternal("Transpiling from SystemVerilog to C++.", logInternalSeverityInfo)
 
-	return newLogInternal(msg, severity)
+	return runMakeTarget("obj_dir", workspace, logs)
 }
 
-func logInternalWorkspace(msg, workspace, severity string) LogInternal {
-	log.Println(workspace+":", msg)
+func transpileCPPToJS(workspace string, logs chan<- interface{}) error {
+	logs <- logInternal("Transpiling from C++ to JavaScript.", logInternalSeverityInfo)
 
-	return newLogInternal(msg, severity)
-}
-
-// copyDir Copy the contents of a src directory to a dst one.
-// Obs. 1: It does not copy recursively.
-// Obs. 2: The method of copying individual files is a bit expensive for larges ones.
-func copyDir(src, dst string) error {
-	srcInfo, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if !srcInfo.IsDir() {
-		return errors.New("src must be a directory")
-	}
-
-	dstInfo, err := os.Stat(dst)
-	if err != nil {
-		return err
-	}
-
-	if !dstInfo.IsDir() {
-		return errors.New("dst must be a directory")
-	}
-
-	err = filepath.Walk(src, func(srcFilename string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if os.SameFile(srcInfo, info) {
-			return nil
-		}
-
-		if info.IsDir() {
-			return fmt.Errorf("recursive copying is not supported: %s", info.Name())
-		}
-
-		fileData, err := ioutil.ReadFile(srcFilename)
-		if err != nil {
-			return err
-		}
-
-		dstFilename := path.Join(dst, info.Name())
-
-		return ioutil.WriteFile(dstFilename, fileData, 0600)
-	})
-
-	return err
+	return runMakeTarget("simulator.js", workspace, logs)
 }
 
 func runMakeTarget(target, workspace string, logs chan<- interface{}) error {
@@ -217,14 +169,62 @@ func runMakeTarget(target, workspace string, logs chan<- interface{}) error {
 	return nil
 }
 
-func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
-	logs <- logInternal("Transpiling from SystemVerilog to C++.", logInternalSeverityInfo)
+func logInternal(msg, severity string) LogInternal {
+	log.Println(msg)
 
-	return runMakeTarget("obj_dir", workspace, logs)
+	return newLogInternal(msg, severity)
 }
 
-func transpileCPPToJS(workspace string, logs chan<- interface{}) error {
-	logs <- logInternal("Transpiling from C++ to JavaScript.", logInternalSeverityInfo)
+func logInternalWorkspace(msg, workspace, severity string) LogInternal {
+	log.Println(workspace+":", msg)
 
-	return runMakeTarget("simulator.js", workspace, logs)
+	return newLogInternal(msg, severity)
+}
+
+// copyDir Copy the contents of a src directory to a dst one.
+// Obs. 1: It does not copy recursively.
+// Obs. 2: The method of copying individual files is a bit expensive for larges ones.
+func copyDir(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if !srcInfo.IsDir() {
+		return errors.New("src must be a directory")
+	}
+
+	dstInfo, err := os.Stat(dst)
+	if err != nil {
+		return err
+	}
+
+	if !dstInfo.IsDir() {
+		return errors.New("dst must be a directory")
+	}
+
+	err = filepath.Walk(src, func(srcFilename string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if os.SameFile(srcInfo, info) {
+			return nil
+		}
+
+		if info.IsDir() {
+			return fmt.Errorf("recursive copying is not supported: %s", info.Name())
+		}
+
+		fileData, err := ioutil.ReadFile(srcFilename)
+		if err != nil {
+			return err
+		}
+
+		dstFilename := path.Join(dst, info.Name())
+
+		return ioutil.WriteFile(dstFilename, fileData, 0600)
+	})
+
+	return err
 }
