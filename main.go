@@ -17,10 +17,10 @@ func main() {
 		})
 	})
 
-	msgs := make(chan map[string]string)
+	logs := make(chan interface{})
 
 	go func() {
-		for msg := range msgs {
+		for msg := range logs {
 			fmt.Println(msg)
 		}
 	}()
@@ -61,7 +61,7 @@ func main() {
 		lcd_b <= {SWI, 56'hFEDCBA09876543};
 	  end
 	
-	endmodule`, msgs)
+	endmodule`, logs)
 
 	if err := r.Run(); err != nil {
 		log.Fatal("Listen and serve: ", err)

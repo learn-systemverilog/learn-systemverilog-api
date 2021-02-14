@@ -1,35 +1,22 @@
 package transpiler
 
-import "log"
-
-// Log A log.
-type Log struct{}
-
 // LogInternal A internal log.
 type LogInternal struct {
-	Log
-
 	Message  string
 	Severity string
 }
 
 // LogStdout A log from the stdout.
 type LogStdout struct {
-	Log
-
 	Stdout string
 }
 
 // LogStderr A log from the stderr.
 type LogStderr struct {
-	Log
-
 	Stderr string
 }
 
-func logInternal(msg, workspace, severity string) LogInternal {
-	log.Println(msg)
-
+func newLogInternal(msg, severity string) LogInternal {
 	return LogInternal{Message: msg, Severity: severity}
 }
 

@@ -15,5 +15,4 @@ const (
 	logInternalSeverityInfo  = "info"
 	logInternalSeverityWarn  = "warn"
 	logInternalSeverityError = "error"
-	logInternalSeverityFatal = "fatal"
 )

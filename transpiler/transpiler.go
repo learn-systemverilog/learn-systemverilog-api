@@ -14,36 +14,31 @@ import (
 )
 
 // Run ...
-func Run(code string, msgs chan<- map[string]string) {
-	defer close(msgs)
+func Run(code string, logs chan<- interface{}) {
+	defer close(logs)
 
-	msgs <- map[string]string{
-		"type":    msgTypeInfo,
-		"message": "Creating temporary workspace.",
-	}
+	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)
 
 	workspace, err := setupTempWorkspace(code)
 	if err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
+		logs <- logInternal(err.Error(), logInternalSeverityError)
 
 		return
 	}
 	defer func() {
 		err := os.RemoveAll(workspace)
 		if err != nil {
-			log.Printf("Error while trying to remove workspace: %v", err)
+			logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityDebug)
 		}
 	}()
 
-	msgs <- map[string]string{
-		"type":    msgTypeInfo,
-		"message": "Transpiling the code from SystemVerilog to C++.",
-	}
+	logs <- logInternalWorkspace(
+		"Transpiling the code from SystemVerilog to C++.",
+		workspace,
+		logInternalSeverityInfo,
+	)
 
-	if !transpileSVToCPP(workspace, msgs) {
+	if !transpileSVToCPP(workspace, logs) {
 		return
 	}
 }
@@ -85,6 +80,18 @@ func setupTempWorkspace(code string) (workspace string, err error) {
 	log.Println("Main user code file created successfully.")
 
 	return
+}
+
+func logInternal(msg, severity string) LogInternal {
+	log.Println(msg)
+
+	return newLogInternal(msg, severity)
+}
+
+func logInternalWorkspace(msg, workspace, severity string) LogInternal {
+	log.Println(workspace+":", msg)
+
+	return newLogInternal(msg, severity)
 }
 
 // copyDir Copy the contents of a src directory to a dst one.
@@ -135,37 +142,26 @@ func copyDir(src, dst string) error {
 	return err
 }
 
-func transpileSVToCPP(workspace string, msgs chan<- map[string]string) bool {
+func transpileSVToCPP(workspace string, logs chan<- interface{}) bool {
 	cmd := exec.Command("make", "obj_dir")
 	cmd.Dir = workspace
 
-	cmd.Stdin = nil
-
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
+		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
 		return false
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
+		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
 		return false
 	}
 
 	if err := cmd.Start(); err != nil {
-		msgs <- map[string]string{
-			"type":    msgTypeError,
-			"message": err.Error(),
-		}
+		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
 		return false
 	}
@@ -176,16 +172,10 @@ func transpileSVToCPP(workspace string, msgs chan<- map[string]string) bool {
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			msgs <- map[string]string{
-				"type":    msgTypeStdout,
-				"message": scanner.Text(),
-			}
+			logs <- newLogStdout(scanner.Text())
 		}
 		if scanner.Err() != nil {
-			msgs <- map[string]string{
-				"type":    msgTypeWarning,
-				"message": scanner.Err().Error(),
-			}
+			logs <- logInternalWorkspace(scanner.Err().Error(), workspace, logInternalSeverityWarn)
 		}
 
 		wg.Done()
@@ -195,16 +185,11 @@ func transpileSVToCPP(workspace string, msgs chan<- map[string]string) bool {
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			msgs <- map[string]string{
-				"type":    msgTypeStderr,
-				"message": scanner.Text(),
-			}
+			logs <- newLogStderr(scanner.Text())
+
 		}
 		if scanner.Err() != nil {
-			msgs <- map[string]string{
-				"type":    msgTypeWarning,
-				"message": scanner.Err().Error(),
-			}
+			logs <- logInternalWorkspace(scanner.Err().Error(), workspace, logInternalSeverityWarn)
 		}
 
 		wg.Done()
@@ -214,18 +199,12 @@ func transpileSVToCPP(workspace string, msgs chan<- map[string]string) bool {
 
 	if err := cmd.Wait(); err != nil {
 		if errors.Is(err, &exec.ExitError{}) {
-			msgs <- map[string]string{
-				"type":    "exit",
-				"message": err.Error(),
-			}
+			logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
 			return false
 		}
 
-		msgs <- map[string]string{
-			"type":    msgTypeWarning,
-			"message": fmt.Sprintf("Waiting for the command: %v", err),
-		}
+		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityDebug)
 	}
 
 	return true
