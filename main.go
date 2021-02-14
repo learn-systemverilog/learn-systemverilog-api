@@ -25,7 +25,7 @@ func main() {
 		}
 	}()
 
-	transpiler.Run(`// DESCRIPTION: Verilator: Systemverilog example module
+	err := transpiler.Run(`// DESCRIPTION: Verilator: Systemverilog example module
 	// with interface to switch buttons, LEDs, LCD and register display
 	
 	parameter NINSTR_BITS = 32;
@@ -62,6 +62,9 @@ func main() {
 	  end
 	
 	endmodule`, logs)
+	if err != nil {
+		log.Fatal("Transpile: ", err)
+	}
 
 	if err := r.Run(); err != nil {
 		log.Fatal("Listen and serve: ", err)

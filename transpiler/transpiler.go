@@ -14,7 +14,7 @@ import (
 )
 
 // Run ...
-func Run(code string, logs chan<- interface{}) {
+func Run(code string, logs chan<- interface{}) error {
 	defer close(logs)
 
 	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)
@@ -23,7 +23,7 @@ func Run(code string, logs chan<- interface{}) {
 	if err != nil {
 		logs <- logInternal(err.Error(), logInternalSeverityError)
 
-		return
+		return err
 	}
 	defer func() {
 		err := os.RemoveAll(workspace)
@@ -38,9 +38,11 @@ func Run(code string, logs chan<- interface{}) {
 		logInternalSeverityInfo,
 	)
 
-	if !transpileSVToCPP(workspace, logs) {
-		return
+	if err := transpileSVToCPP(workspace, logs); err != nil {
+		return fmt.Errorf("transpiling from sv to cpp: %w", err)
 	}
+
+	return nil
 }
 
 func setupTempWorkspace(code string) (workspace string, err error) {
@@ -142,7 +144,7 @@ func copyDir(src, dst string) error {
 	return err
 }
 
-func transpileSVToCPP(workspace string, logs chan<- interface{}) bool {
+func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
 	cmd := exec.Command("make", "obj_dir")
 	cmd.Dir = workspace
 
@@ -150,20 +152,20 @@ func transpileSVToCPP(workspace string, logs chan<- interface{}) bool {
 	if err != nil {
 		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
-		return false
+		return fmt.Errorf("stdout pipe: %w", err)
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
-		return false
+		return fmt.Errorf("stderr pipe: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
 		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
-		return false
+		return fmt.Errorf("starting command: %w", err)
 	}
 
 	var wg sync.WaitGroup
@@ -198,14 +200,15 @@ func transpileSVToCPP(workspace string, logs chan<- interface{}) bool {
 	wg.Wait()
 
 	if err := cmd.Wait(); err != nil {
-		if errors.Is(err, &exec.ExitError{}) {
+		if _, ok := err.(*exec.ExitError); ok {
 			logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityError)
 
-			return false
+			return fmt.Errorf("waiting command: %w", err)
 		}
 
-		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityDebug)
+		// Do we need to handle this error?
+		logs <- logInternalWorkspace(err.Error(), workspace, logInternalSeverityWarn)
 	}
 
-	return true
+	return nil
 }
