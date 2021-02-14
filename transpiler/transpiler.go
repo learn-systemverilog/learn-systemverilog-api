@@ -13,8 +13,8 @@ import (
 	"sync"
 )
 
-// Run ...
-func Run(code string, logs chan<- interface{}) error {
+// Transpile Transpile your code from SystemVerilog to C++.
+func Transpile(code string, logs chan<- interface{}) error {
 	defer close(logs)
 
 	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)

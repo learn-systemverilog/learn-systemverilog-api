@@ -25,7 +25,7 @@ func main() {
 		}
 	}()
 
-	err := transpiler.Run(`// DESCRIPTION: Verilator: Systemverilog example module
+	err := transpiler.Transpile(`// DESCRIPTION: Verilator: Systemverilog example module
 	// with interface to switch buttons, LEDs, LCD and register display
 	
 	parameter NINSTR_BITS = 32;
