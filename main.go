@@ -1,9 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/learn-systemverilog/learn-systemverilog-api/transpiler"
-	"log"
 )
 
 func main() {
