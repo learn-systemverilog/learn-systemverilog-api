@@ -14,7 +14,7 @@ import (
 )
 
 // Transpile Transpile your code from SystemVerilog to C++.
-func Transpile(code string, logs chan<- interface{}) error {
+func Transpile(code string, logs chan<- interface{}) ([]byte, error) {
 	defer close(logs)
 
 	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)
@@ -23,7 +23,7 @@ func Transpile(code string, logs chan<- interface{}) error {
 	if err != nil {
 		logs <- logInternal(err.Error(), logInternalSeverityError)
 
-		return err
+		return nil, err
 	}
 	defer func() {
 		err := os.RemoveAll(workspace)
@@ -39,14 +39,19 @@ func Transpile(code string, logs chan<- interface{}) error {
 	)
 
 	if err := transpileSVToCPP(workspace, logs); err != nil {
-		return fmt.Errorf("transpiling from sv to cpp: %w", err)
+		return nil, fmt.Errorf("transpiling from sv to cpp: %w", err)
 	}
 
 	if err := transpileCPPToJS(workspace, logs); err != nil {
-		return fmt.Errorf("transpiling from cpp to js: %w", err)
+		return nil, fmt.Errorf("transpiling from cpp to js: %w", err)
 	}
 
-	return nil
+	output, err := getOutput(workspace)
+	if err != nil {
+		return nil, fmt.Errorf("reading output: %w", err)
+	}
+
+	return output, nil
 }
 
 func setupTempWorkspace(code string) (workspace string, err error) {
@@ -98,6 +103,17 @@ func transpileCPPToJS(workspace string, logs chan<- interface{}) error {
 	logs <- logInternal("Transpiling from C++ to JavaScript.", logInternalSeverityInfo)
 
 	return runMakeTarget("simulator.js", workspace, logs)
+}
+
+func getOutput(workspace string) ([]byte, error) {
+	outputPath := filepath.Join(workspace, outputJSFileName)
+
+	output, err := ioutil.ReadFile(outputPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func runMakeTarget(target, workspace string, logs chan<- interface{}) error {
