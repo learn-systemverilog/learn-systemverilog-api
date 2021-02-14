@@ -1,20 +1,35 @@
 package transpiler
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"sync"
 )
 
 // Run ...
-func Run(code string) error {
+func Run(code string, msgs chan<- map[string]string) {
+	defer close(msgs)
+
+	msgs <- map[string]string{
+		"type":    msgTypeInfo,
+		"message": "Creating temporary workspace.",
+	}
+
 	workspace, err := setupTempWorkspace(code)
 	if err != nil {
-		return fmt.Errorf("setupping temp workspace: %w", err)
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return
 	}
 	defer func() {
 		err := os.RemoveAll(workspace)
@@ -23,7 +38,104 @@ func Run(code string) error {
 		}
 	}()
 
-	return nil
+	msgs <- map[string]string{
+		"type":    msgTypeInfo,
+		"message": "Transpiling the code from SystemVerilog to C++.",
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+
+	cmd := exec.Command("make", "simulator.js")
+	cmd.Dir = workspace
+
+	cmd.Stdin = nil
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return
+	}
+
+	if err := cmd.Start(); err != nil {
+		msgs <- map[string]string{
+			"type":    msgTypeError,
+			"message": err.Error(),
+		}
+
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			msgs <- map[string]string{
+				"type":    msgTypeStdout,
+				"message": scanner.Text(),
+			}
+		}
+		if scanner.Err() != nil {
+			msgs <- map[string]string{
+				"type":    msgTypeWarning,
+				"message": scanner.Err().Error(),
+			}
+		}
+
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			msgs <- map[string]string{
+				"type":    msgTypeStderr,
+				"message": scanner.Text(),
+			}
+		}
+		if scanner.Err() != nil {
+			msgs <- map[string]string{
+				"type":    msgTypeWarning,
+				"message": scanner.Err().Error(),
+			}
+		}
+
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	if err := cmd.Wait(); err != nil {
+		if errors.Is(err, &exec.ExitError{}) {
+			msgs <- map[string]string{
+				"type":    "exit",
+				"message": err.Error(),
+			}
+
+			return
+		}
+
+		msgs <- map[string]string{
+			"type":    msgTypeWarning,
+			"message": fmt.Sprintf("Waiting for the command: %v", err),
+		}
+	}
 }
 
 func setupTempWorkspace(code string) (workspace string, err error) {
