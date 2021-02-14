@@ -9,4 +9,11 @@ const (
 	msgTypeStdout         = "stdout"
 	msgTypeStderr         = "stderr"
 	msgTypeExit           = "exit"
+
+	logInternalSeverityTrace = "trace"
+	logInternalSeverityDebug = "debug"
+	logInternalSeverityInfo  = "info"
+	logInternalSeverityWarn  = "warn"
+	logInternalSeverityError = "error"
+	logInternalSeverityFatal = "fatal"
 )
