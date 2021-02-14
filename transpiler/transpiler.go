@@ -42,6 +42,10 @@ func Transpile(code string, logs chan<- interface{}) error {
 		return fmt.Errorf("transpiling from sv to cpp: %w", err)
 	}
 
+	if err := transpileCPPToJS(workspace, logs); err != nil {
+		return fmt.Errorf("transpiling from cpp to js: %w", err)
+	}
+
 	return nil
 }
 
@@ -144,8 +148,8 @@ func copyDir(src, dst string) error {
 	return err
 }
 
-func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
-	cmd := exec.Command("make", "obj_dir")
+func runMakeTarget(target, workspace string, logs chan<- interface{}) error {
+	cmd := exec.Command("make", target)
 	cmd.Dir = workspace
 
 	stdout, err := cmd.StdoutPipe()
@@ -211,4 +215,16 @@ func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
 	}
 
 	return nil
+}
+
+func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
+	logs <- logInternal("Transpiling from SystemVerilog to C++.", logInternalSeverityInfo)
+
+	return runMakeTarget("obj_dir", workspace, logs)
+}
+
+func transpileCPPToJS(workspace string, logs chan<- interface{}) error {
+	logs <- logInternal("Transpiling from C++ to JavaScript.", logInternalSeverityInfo)
+
+	return runMakeTarget("simulator.js", workspace, logs)
 }
