@@ -14,9 +14,6 @@ func Transpile(c *gin.Context) {
 
 	go func() {
 		output, err := transpiler.Transpile(transpiler.DummyWorkingCode, logs)
-
-		close(logs)
-
 		if err == nil {
 			outputChan <- output
 		}

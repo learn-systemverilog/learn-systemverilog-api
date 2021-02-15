@@ -15,6 +15,8 @@ import (
 
 // Transpile Transpile your code from SystemVerilog to C++.
 func Transpile(code string, logs chan<- interface{}) (string, error) {
+	defer close(logs)
+
 	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)
 
 	workspace, err := setupTempWorkspace(code)
