@@ -14,16 +14,14 @@ import (
 )
 
 // Transpile Transpile your code from SystemVerilog to C++.
-func Transpile(code string, logs chan<- interface{}) ([]byte, error) {
-	defer close(logs)
-
+func Transpile(code string, logs chan<- interface{}) (string, error) {
 	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)
 
 	workspace, err := setupTempWorkspace(code)
 	if err != nil {
 		logs <- logInternal(err.Error(), logInternalSeverityError)
 
-		return nil, err
+		return "", err
 	}
 	defer func() {
 		err := os.RemoveAll(workspace)
@@ -39,19 +37,19 @@ func Transpile(code string, logs chan<- interface{}) ([]byte, error) {
 	)
 
 	if err := transpileSVToCPP(workspace, logs); err != nil {
-		return nil, fmt.Errorf("transpiling from sv to cpp: %w", err)
+		return "", fmt.Errorf("transpiling from sv to cpp: %w", err)
 	}
 
 	if err := transpileCPPToJS(workspace, logs); err != nil {
-		return nil, fmt.Errorf("transpiling from cpp to js: %w", err)
+		return "", fmt.Errorf("transpiling from cpp to js: %w", err)
 	}
 
 	output, err := getOutput(workspace)
 	if err != nil {
-		return nil, fmt.Errorf("reading output: %w", err)
+		return "", fmt.Errorf("reading output: %w", err)
 	}
 
-	return output, nil
+	return string(output), nil
 }
 
 func setupTempWorkspace(code string) (workspace string, err error) {
