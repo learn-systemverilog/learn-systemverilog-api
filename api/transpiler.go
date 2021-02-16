@@ -1,7 +1,8 @@
 package api
 
 import (
-	"io"
+	"encoding/json"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/learn-systemverilog/learn-systemverilog-api/transpiler"
@@ -21,26 +22,50 @@ func Transpile(c *gin.Context) {
 		close(outputChan)
 	}()
 
-	_ = c.Stream(func(w io.Writer) bool {
-		if log, ok := <-logs; ok {
-			name := getLogName(log)
-			c.SSEvent(name, log)
+	sseSetup(c)
 
-			return true
+	for log := range logs {
+		j, err := json.Marshal(log)
+		if err != nil {
+			panic(err)
 		}
 
-		if output, ok := <-outputChan; ok {
-			c.SSEvent("output", output)
+		sseStep(c, getLogName(log), string(j))
+	}
+
+	for output := range outputChan {
+		j, err := json.Marshal(output)
+		if err != nil {
+			panic(err)
 		}
 
-		return false
-	})
+		sseStep(c, "output", string(j))
+	}
+
+	sseClose(c)
 
 	// Cleaning the channels so the transpiler can continue.
 	for range logs {
 	}
 	for range outputChan {
 	}
+}
+
+func sseSetup(c *gin.Context) {
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+
+	c.Writer.Flush()
+}
+
+func sseStep(c *gin.Context, name, data string) {
+	c.String(http.StatusOK, "data: %s\n\n", data)
+
+	c.Writer.Flush()
+}
+
+func sseClose(c *gin.Context) {
+	c.Status(http.StatusNoContent)
 }
 
 func getLogName(log interface{}) string {

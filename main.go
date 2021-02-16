@@ -3,12 +3,15 @@ package main
 import (
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/learn-systemverilog/learn-systemverilog-api/api"
 )
 
 func main() {
 	r := gin.Default()
+
+	r.Use(cors.Default())
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
