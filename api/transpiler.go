@@ -10,11 +10,13 @@ import (
 
 // Transpile Begin transpilation and send logs in realtime.
 func Transpile(c *gin.Context) {
+	code := c.Query("code")
+
 	logs := make(chan interface{})
 	outputChan := make(chan string)
 
 	go func() {
-		output, err := transpiler.Transpile(transpiler.DummyWorkingCode, logs)
+		output, err := transpiler.Transpile(code, logs)
 		if err == nil {
 			outputChan <- output
 		}
