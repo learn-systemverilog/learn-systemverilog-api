@@ -45,7 +45,6 @@ const (
 
 	outputJSFileName = "simulator.js"
 
-	logInternalSeverityTrace = "trace"
 	logInternalSeverityDebug = "debug"
 	logInternalSeverityInfo  = "info"
 	logInternalSeverityWarn  = "warn"
