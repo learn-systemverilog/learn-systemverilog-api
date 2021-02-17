@@ -12,7 +12,7 @@ import (
 func Transpile(c *gin.Context) {
 	code := c.Query("code")
 
-	logs := make(chan interface{})
+	logs := make(chan transpiler.Log)
 	outputChan := make(chan string)
 
 	go func() {
@@ -32,7 +32,7 @@ func Transpile(c *gin.Context) {
 			panic(err)
 		}
 
-		sseStep(c, getLogName(log), string(j))
+		sseStep(c, log.Name(), string(j))
 	}
 
 	for output := range outputChan {
@@ -68,20 +68,4 @@ func sseStep(c *gin.Context, name, data string) {
 
 func sseClose(c *gin.Context) {
 	c.Status(http.StatusNoContent)
-}
-
-func getLogName(log interface{}) string {
-	if _, ok := log.(transpiler.LogInternal); ok {
-		return "internal"
-	}
-
-	if _, ok := log.(transpiler.LogStdout); ok {
-		return "stdout"
-	}
-
-	if _, ok := log.(transpiler.LogStderr); ok {
-		return "stderr"
-	}
-
-	return "unknown"
 }

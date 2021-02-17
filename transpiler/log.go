@@ -1,5 +1,10 @@
 package transpiler
 
+// Log a interface for a log.
+type Log interface {
+	Name() string
+}
+
 // LogInternal A internal log.
 type LogInternal struct {
 	Message  string `json:"message"`
@@ -20,10 +25,25 @@ func newLogInternal(msg, severity string) LogInternal {
 	return LogInternal{Message: msg, Severity: severity}
 }
 
+// Name Returns the instance type name.
+func (LogInternal) Name() string {
+	return "internal"
+}
+
 func newLogStdout(stdout string) LogStdout {
 	return LogStdout{Stdout: stdout}
 }
 
+// Name Returns the instance type name.
+func (LogStdout) Name() string {
+	return "stdout"
+}
+
 func newLogStderr(stderr string) LogStderr {
 	return LogStderr{Stderr: stderr}
+}
+
+// Name Returns the instance type name.
+func (LogStderr) Name() string {
+	return "stderr"
 }

@@ -14,7 +14,7 @@ import (
 )
 
 // Transpile Transpile your code from SystemVerilog to C++.
-func Transpile(code string, logs chan<- interface{}) (string, error) {
+func Transpile(code string, logs chan<- Log) (string, error) {
 	defer close(logs)
 
 	logs <- logInternal("Creating temporary workspace.", logInternalSeverityInfo)
@@ -87,13 +87,13 @@ func setupTempWorkspace(code string) (workspace string, err error) {
 	return
 }
 
-func transpileSVToCPP(workspace string, logs chan<- interface{}) error {
+func transpileSVToCPP(workspace string, logs chan<- Log) error {
 	logs <- logInternal("Transpiling from SystemVerilog to C++.", logInternalSeverityInfo)
 
 	return runMakeTarget("obj_dir", workspace, logs)
 }
 
-func transpileCPPToJS(workspace string, logs chan<- interface{}) error {
+func transpileCPPToJS(workspace string, logs chan<- Log) error {
 	logs <- logInternal("Transpiling from C++ to JavaScript.", logInternalSeverityInfo)
 
 	return runMakeTarget("simulator.js", workspace, logs)
@@ -110,7 +110,7 @@ func getOutput(workspace string) ([]byte, error) {
 	return output, nil
 }
 
-func runMakeTarget(target, workspace string, logs chan<- interface{}) error {
+func runMakeTarget(target, workspace string, logs chan<- Log) error {
 	cmd := exec.Command("make", target)
 	cmd.Dir = workspace
 
