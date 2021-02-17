@@ -61,7 +61,7 @@ func sseSetup(c *gin.Context) {
 }
 
 func sseStep(c *gin.Context, name, data string) {
-	c.String(http.StatusOK, "data: %s\n\n", data)
+	c.String(http.StatusOK, "event: %s\ndata: %s\n\n", name, data)
 
 	c.Writer.Flush()
 }

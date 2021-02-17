@@ -32,12 +32,6 @@ func Transpile(code string, logs chan<- interface{}) (string, error) {
 		}
 	}()
 
-	logs <- logInternalWorkspace(
-		"Transpiling the code from SystemVerilog to C++.",
-		workspace,
-		logInternalSeverityInfo,
-	)
-
 	if err := transpileSVToCPP(workspace, logs); err != nil {
 		return "", fmt.Errorf("transpiling from sv to cpp: %w", err)
 	}
