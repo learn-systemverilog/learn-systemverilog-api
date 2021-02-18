@@ -45,7 +45,7 @@ There are four types of events:
 - **stderr**: Standard error written by the transpilers
   - Format: `{"stderr": "..."}`
 - **output**: A JSON encoded string representing the transpiled JavaScript code. This means that the transpilation was successful
-  - Format: `var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --...`
+  - Format: `"var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --..."`
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
