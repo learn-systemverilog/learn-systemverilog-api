@@ -111,7 +111,7 @@ func getOutput(workspace string) ([]byte, error) {
 }
 
 func runMakeTarget(target, workspace string, logs chan<- Log) error {
-	cmd := exec.Command("make", target)
+	cmd := exec.Command("bash", "-c", "source \"/work/emsdk/emsdk_env.sh\"; make "+target)
 	cmd.Dir = workspace
 
 	stdout, err := cmd.StdoutPipe()

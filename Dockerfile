@@ -23,7 +23,7 @@ RUN wget https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz \
 
 ENV PATH=$PATH:/usr/local/go/bin
 
-WORKDIR learn-systemverilog-api
+WORKDIR /work/learn-systemverilog-api
 
 COPY go.mod .
 COPY go.sum .
@@ -31,4 +31,6 @@ RUN go mod download
 
 COPY . .
 
-ENTRYPOINT ["bash"]
+RUN go install
+
+ENTRYPOINT [ "/root/go/bin/learn-systemverilog-api" ]
