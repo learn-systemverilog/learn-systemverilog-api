@@ -54,7 +54,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Some things we need:
 - Tests
-- Workspace isolation and security
+- Better workspace isolation and security
 - C++ to JavaScript transpilation time and output size
 
 ## License
