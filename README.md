@@ -54,3 +54,6 @@ Some things we need:
 - Tests
 - Workspace isolation and security
 - C++ to JavaScript transpilation time and output size
+
+## License
+[MIT](https://github.com/learn-systemverilog/learn-systemverilog-api/blob/main/LICENSE)
