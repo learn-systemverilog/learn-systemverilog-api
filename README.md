@@ -44,5 +44,5 @@ There are four types of events:
   - Format: `{"stdout": "..."}`
 - `stderr`: Standard error written by the transpilers.
   - Format: `{"stderr": "..."}`
-- `output`: A JSON encoded string representing the transpiled JavaScript code.
+- `output`: A JSON encoded string representing the transpiled JavaScript code. This means that the transpilation was successful.
   - Format: `var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --...`
