@@ -32,7 +32,17 @@ Later, open this url: http://localhost:8080. You should see the following messag
 Congratulations!
 
 ## Usage
-To transpile a code written in SystemVerilog to JavaScript, you will need to watch for the Server-sent events on the following endpoint:
+To transpile a code written in SystemVerilog to JavaScript, you will need to watch (you can use your browser) for the Server-sent events on the following endpoint:
 ```
 GET http://localhost:8080/transpile?code={YOUR_SYSTEMVERILOG_CODE}
 ```
+
+There are four types of events:
+- `internal`: Internal logs from the server.
+  - Format: `{"message": "...", "severity": "debug|info|warn|error"}`
+- `stdout`: Standard output written by the transpilers.
+  - Format: `{"stdout": "..."}`
+- `stderr`: Standard error written by the transpilers.
+  - Format: `{"stderr": "..."}`
+- `output`: A JSON encoded string representing the transpiled JavaScript code.
+  - Format: `var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --...`
