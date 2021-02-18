@@ -30,3 +30,9 @@ Later, open this url: http://localhost:8080. You should see the following messag
 {"message":"Hello, World!"}
 ```
 Congratulations!
+
+## Usage
+To transpile a code written in SystemVerilog to JavaScript, you will need to watch for the Server-sent events on the following endpoint:
+```
+GET http://localhost:8080/transpile?code={YOUR_SYSTEMVERILOG_CODE}
+```
