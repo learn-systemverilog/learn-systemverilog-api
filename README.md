@@ -25,4 +25,8 @@ Next, run the docker image as a container:
 docker run --publish 8080:8080 learn-systemverilog-api
 ```
 
-Later, open the following url: http://localhost:8080
+Later, open this url: http://localhost:8080. You should see the following message:
+```
+{"message":"Hello, World!"}
+```
+Congratulations!
