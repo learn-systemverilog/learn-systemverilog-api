@@ -33,4 +33,4 @@ COPY . .
 
 RUN go install
 
-ENTRYPOINT [ "/root/go/bin/learn-systemverilog-api" ]
+ENTRYPOINT ["./docker-entrypoint.sh"]
