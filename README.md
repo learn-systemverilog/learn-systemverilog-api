@@ -48,6 +48,11 @@ There are four types of events:
 | **stderr** | `{"stderr": "..."}` | Standard error written by the transpilers |
 | **output** | `"var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --..."` | A JSON encoded string representing the transpiled JavaScript code. This means that the transpilation was successful |
 
+## How it works
+```
+SystemVerilog -> [Verilator: C++] -> [Emscripten: JavaScript] -> JavaScript
+```
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
