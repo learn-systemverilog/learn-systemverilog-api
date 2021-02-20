@@ -40,14 +40,13 @@ GET http://localhost:8080/transpile?code={YOUR_SYSTEMVERILOG_CODE}
 ```
 
 There are four types of events:
-- **internal**: Internal logs from the server
-  - Format: `{"message": "...", "severity": "debug|info|warn|error"}`
-- **stdout**: Standard output written by the transpilers
-  - Format: `{"stdout": "..."}`
-- **stderr**: Standard error written by the transpilers
-  - Format: `{"stderr": "..."}`
-- **output**: A JSON encoded string representing the transpiled JavaScript code. This means that the transpilation was successful
-  - Format: `"var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --..."`
+
+| Name | Format | Description |
+|:-----|:-------|:------------|
+| **internal** | `{"message": "...", "severity": "debug\|info\|warn\|error"}` | Internal logs from the server |
+| **stdout** | `{"stdout": "..."}` | Standard output written by the transpilers |
+| **stderr** | `{"stderr": "..."}` | Standard error written by the transpilers |
+| **output** | `"var Module = typeof Module !== 'undefined' ? Module : {};\n\n// --..."` | A JSON encoded string representing the transpiled JavaScript code. This means that the transpilation was successful |
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
