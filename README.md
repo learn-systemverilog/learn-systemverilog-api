@@ -59,7 +59,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 Some things we need:
 - Tests
 - Better workspace isolation and security
-- C++ to JavaScript transpilation time and output size
+- C++ to JavaScript transpilation time and output size improvement
 
 ## License
 [MIT](https://github.com/learn-systemverilog/learn-systemverilog-api/blob/main/LICENSE)
